@@ -17,10 +17,11 @@ The flashcard app helps Thai speakers learn English through multiple-choice ques
 ### Next.js Application (flashcard-app/)
 ```bash
 cd flashcard-app
-npm run dev --turbopack     # Development server (uses Turbopack for faster builds)
+npm run dev                # Development server with Turbopack (port 3002)
 npm run build              # Production build
-npm run start              # Start production server
+npm run start              # Start production server (port 3002)
 npm run lint               # ESLint checking
+pm2 start ecosystem.config.js  # PM2 production deployment
 ```
 
 ### Vocabulary Management (root directory)
@@ -34,10 +35,11 @@ node filter-and-add-levels.js       # Process and add words by level
 ## Architecture Overview
 
 ### Flashcard Application Structure
-- **src/app/page.tsx** - Main flashcard component with complete learning interface
+- **src/app/page.tsx** - Main flashcard component with complete learning interface (client-side)
 - **src/data/vocabulary.ts** - TypeScript vocabulary database with structured Word objects
 - **src/app/layout.tsx** - Root layout with Thai-English app metadata
-- Uses React 19, Next.js 15, TypeScript, and Tailwind CSS v4
+- **ecosystem.config.js** - PM2 configuration for production deployment
+- Uses React 19, Next.js 15, TypeScript, Tailwind CSS v4, and ESLint
 
 ### Vocabulary Data Model
 ```typescript
@@ -65,10 +67,11 @@ interface Word {
 ### Vocabulary Management System
 The VocabularyManager class (`vocabulary-utils.js`) provides:
 - Duplicate detection and validation
-- ID generation and tracking
+- ID generation and tracking (auto-increments from 393+)
 - Word object creation with validation
 - Level appropriateness checking
 - Batch word addition to TypeScript file
+- Parses existing vocabulary.ts to maintain data integrity
 
 ## Data Organization
 
@@ -106,8 +109,11 @@ The database contains approximately 400+ words across all levels. Use `vocabular
 - Pure React hooks (no external state library)
 - LocalStorage for persistence (progress tracking, theme, settings)
 - Auto-save progress on word completion
+- Client-side rendering (`"use client"`) for interactive features
 
-### Styling
-- Tailwind CSS v4 with custom theme variables
+### Styling & Configuration
+- Tailwind CSS v4 with PostCSS configuration
 - Responsive design with mobile-first approach
 - Dark mode support with CSS custom properties
+- TypeScript with strict mode and Next.js path aliases (`@/*`)
+- ESLint with Next.js and TypeScript rules

@@ -4,7 +4,7 @@
 const fs = require('fs');
 
 // Read the vocabulary file
-const vocabularyContent = fs.readFileSync('flashcard-app/src/data/vocabulary.ts', 'utf8');
+const vocabularyContent = fs.readFileSync('../flashcard-app/src/data/vocabulary.ts', 'utf8');
 
 // Extract the WORDS array from the file
 const wordsArrayMatch = vocabularyContent.match(/export const WORDS: Word\[\] = \[([\s\S]*)\];/);
@@ -62,13 +62,11 @@ const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 let totalWords = 0;
 levels.forEach(level => {
     const count = levelCounts[level] || 0;
-    const needed = 200 - count;
+    const needed = 500 - count;
     totalWords += count;
-    console.log(`${level}: ${count} words (need ${needed} more to reach 200)`);
+    console.log(`${level}: ${count} words (need ${needed} more to reach 500)`);
 });
 console.log(`Total current words: ${totalWords}`);
-console.log(`Total target words: 1200`);
-console.log(`Total words to add: ${1200 - totalWords}\n`);
 
 // Check for duplicates
 console.log('DUPLICATE DETECTION:');
