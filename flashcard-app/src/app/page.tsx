@@ -46,12 +46,19 @@ const safeSetItem = (k: string, v: string): void => {
 
 // ------------------------- Speech: TTS + STT -------------------------
 const canSpeak = typeof window !== "undefined" && "speechSynthesis" in window;
-const speak = (text: string, lang: string = "en-US"): void => {
+const speak = (text: string, lang: string = "en-GB"): void => {
   if (!canSpeak || !text) return;
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang;
+    try {
+      const voices = window.speechSynthesis.getVoices();
+      const byExactName = voices.find(v => (v.name || "").includes("Google UK English Male"));
+      const byEnGb = voices.find(v => (v.lang || "").toLowerCase().startsWith("en-gb"));
+      const byEn = voices.find(v => (v.lang || "").toLowerCase().startsWith("en"));
+      const v = byExactName || byEnGb || byEn || null;
+      if (v) { u.voice = v; u.lang = v.lang || lang; } else { u.lang = lang; }
+    } catch { u.lang = lang; }
     u.rate = 0.95;
     u.pitch = 1.0;
     window.speechSynthesis.speak(u);
@@ -318,7 +325,6 @@ export default function FlashcardThaiEN() {
               แสดงเฉพาะคำที่ยังไม่รู้
             </label>
             <button className={`text-sm px-3 py-1 ${btnBorder} rounded-full`} onClick={() => setTheme(t=>t==='dark'?'light':'dark')} title="สลับโหมดแสง/มืด">{theme==='dark' ? '🌞 Light' : '🌙 Dark'}</button>
-            <a href="/reading" className={`text-sm px-3 py-1 ${btnBorder} rounded-full`} title="โหมดอ่านบทความ">📖 โหมดอ่าน</a>
           </div>
         </header>
 

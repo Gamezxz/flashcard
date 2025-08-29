@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { READINGS, type ReadingItem } from "@/data/readings";
+
+// Static levels list to keep stable across renders
+const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 const safeGetItem = (k: string): string | null => {
   try { if (typeof window === "undefined") return null; return window.localStorage.getItem(k); } catch { return null; }
@@ -12,14 +15,70 @@ const safeSetItem = (k: string, v: string): void => {
 };
 
 const canSpeak = typeof window !== "undefined" && "speechSynthesis" in window;
-const speak = (text: string, lang: string = "en-US"): void => {
-  if (!canSpeak || !text) return;
-  try { 
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang; u.rate = 0.98; u.pitch = 1.0;
+// Wait until voices are loaded (some browsers populate asynchronously)
+const waitForVoices = async (timeoutMs: number = 4000): Promise<SpeechSynthesisVoice[]> => {
+  const synth = window.speechSynthesis;
+  const existing = synth.getVoices();
+  if (existing && existing.length) return existing;
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve(synth.getVoices());
+    };
+    const onChange = () => { if (synth.getVoices().length) { synth.removeEventListener?.('voiceschanged', onChange); finish(); } };
+    synth.addEventListener?.('voiceschanged', onChange);
+    const start = Date.now();
+    const poll = () => {
+      if (synth.getVoices().length || Date.now() - start > timeoutMs) {
+        synth.removeEventListener?.('voiceschanged', onChange);
+        finish();
+      } else {
+        setTimeout(poll, 150);
+      }
+    };
+    poll();
+  });
+};
+
+const getPreferredVoice = async (lang: string = "en-GB"): Promise<SpeechSynthesisVoice | null> => {
+  try {
+    const voices = await waitForVoices();
+    const lower = (lang || "").toLowerCase();
+    const base = lower.split('-')[0];
+    return (
+      voices.find(v => (v.name || "").includes("Google UK English Male")) ||
+      voices.find(v => (v.lang || "").toLowerCase().startsWith(lower)) ||
+      voices.find(v => (v.lang || "").toLowerCase().startsWith(base)) ||
+      null
+    );
+  } catch { return null; }
+};
+
+// direct speak removed; use speakSequential
+
+const speakSequential = async (parts: string[], lang: string = "en-GB", stopRef?: React.MutableRefObject<boolean>) => {
+  if (!canSpeak) return;
+  window.speechSynthesis.cancel();
+  const voice = await getPreferredVoice(lang);
+  const speakOne = (t: string) => new Promise<void>((resolve) => {
+    const u = new SpeechSynthesisUtterance(t);
+    if (voice) { u.voice = voice; u.lang = voice.lang || lang; } else { u.lang = lang; }
+    u.rate = 0.98; u.pitch = 1.0;
+    u.onend = () => resolve();
+    u.onerror = () => resolve();
     window.speechSynthesis.speak(u);
-  } catch { /* ignore */ }
+  });
+  for (const p of parts) {
+    if (!p) continue;
+    const segments = p.split(/(?<=[\.\!\?\u2026])\s+/);
+    for (const s of segments) {
+      if (stopRef?.current) return;
+      if (s) await speakOne(s);
+      if (stopRef?.current) return;
+    }
+  }
 };
 
 export default function ReadingModePage() {
@@ -28,37 +87,63 @@ export default function ReadingModePage() {
   const [readingId, setReadingId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<number[]>([]); // -1 = not answered
   const [showResult, setShowResult] = useState(false);
+  const [showTrans, setShowTrans] = useState(false);
+  const stopRef = useRef(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [levelFilter, setLevelFilter] = useState<string>("ALL");
 
   useEffect(() => {
     const t = safeGetItem("thai_en_flash_theme") || "light";
     const last = safeGetItem("reading_last_id");
+    const savedLevel = safeGetItem("reading_level_filter") || "ALL";
     setTheme(t);
+    setLevelFilter(savedLevel);
     setReadingId(last || READINGS[0]?.id || null);
     setReady(true);
   }, []);
 
+  const filteredReadings = useMemo(() => {
+    const list = READINGS.filter(r => levelFilter === "ALL" || r.level === levelFilter);
+    const order: Record<string, number> = Object.fromEntries(LEVELS.map((lv, i) => [lv, i]));
+    return [...list].sort((a,b) => {
+      const li = order[a.level] ?? 999;
+      const lj = order[b.level] ?? 999;
+      if (li !== lj) return li - lj;
+      return a.title.localeCompare(b.title);
+    });
+  }, [levelFilter]);
+
   const reading: ReadingItem | null = useMemo(() => {
     const r = READINGS.find(r => r.id === readingId) || null;
-    if (r) setAnswers(Array(r.questions.length).fill(-1));
     return r;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readingId]);
+
+  // Ensure selected article is valid for current filter
+  useEffect(() => {
+    if (!filteredReadings.length) return;
+    const exist = filteredReadings.some(r => r.id === readingId);
+    if (!exist) {
+      const firstId = filteredReadings[0].id;
+      setReadingId(firstId);
+      safeSetItem('reading_last_id', firstId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelFilter, filteredReadings]);
+
+  // Reset answers when reading changes
+  useEffect(() => {
+    if (reading) {
+      setAnswers(Array(reading.questions.length).fill(-1));
+      setShowResult(false);
+    }
+  }, [reading]);
 
   const bgMain = theme === "dark" ? "from-slate-900 to-slate-950 text-slate-100" : "from-white to-slate-50 text-slate-900";
   const cardBg = theme === "dark" ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200";
   const muted = theme === "dark" ? "text-slate-300" : "text-slate-600";
   const btnBorder = theme === "dark" ? "border-slate-700 hover:bg-slate-800" : "border-slate-300 hover:bg-slate-100";
 
-  if (!ready) {
-    return (
-      <div className="min-h-screen w-full bg-gradient-to-b from-white to-slate-50 text-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-2xl mb-2">📖 Reading Mode</div>
-          <div className="text-sm text-slate-600">Loading...</div>
-        </div>
-      </div>
-    );
-  }
+  // Note: Hooks above must run unconditionally; UI branches happen below
 
   const onChoose = (idx: number, choice: number) => {
     const next = [...answers];
@@ -73,8 +158,31 @@ export default function ReadingModePage() {
 
   const speakAll = () => {
     if (!reading) return;
-    reading.paragraphs.forEach((p, i) => setTimeout(() => speak(p), i * 2000));
+    stopRef.current = false;
+    setSpeaking(true);
+    void speakSequential(reading.paragraphs, "en-GB", stopRef).then(() => {
+      setSpeaking(false);
+    });
   };
+
+  const stopSpeak = () => {
+    try {
+      stopRef.current = true;
+      if (canSpeak) window.speechSynthesis.cancel();
+    } catch {}
+    setSpeaking(false);
+  };
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-b from-white to-slate-50 text-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl mb-2">📖 Reading Mode</div>
+          <div className="text-sm text-slate-600">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen w-full bg-gradient-to-b ${bgMain}`}>
@@ -88,30 +196,39 @@ export default function ReadingModePage() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <button className={`text-sm px-3 py-1 ${btnBorder} rounded-full`} onClick={() => setTheme(t=>{const nt=t==='dark'?'light':'dark'; safeSetItem("thai_en_flash_theme", nt); return nt;})}>{theme==='dark'? '🌞 Light':'🌙 Dark'}</button>
+            <button className={`btn btn-outline`} onClick={() => setTheme(t=>{const nt=t==='dark'?'light':'dark'; safeSetItem("thai_en_flash_theme", nt); return nt;})}>{theme==='dark'? '🌞 Light':'🌙 Dark'}</button>
           </div>
         </header>
 
         {/* Selector */}
         <div className={`mb-4 p-4 rounded-xl border ${cardBg}`}>
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-            <label className="text-sm">
-              เลือกบทความ:
-              <select
-                className={`ml-2 border rounded px-2 py-1 ${theme==='dark'?'bg-slate-800 border-slate-700':'bg-white border-slate-300'}`}
-                value={readingId || ''}
-                onChange={(e) => { setReadingId(e.target.value); safeSetItem('reading_last_id', e.target.value); setShowResult(false); }}
-              >
-                {READINGS.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.title} ({r.level})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="flex gap-2">
-              <button className={`px-3 py-1 ${btnBorder} rounded-full`} onClick={speakAll}>🔊 อ่านออกเสียงทั้งเรื่อง</button>
-              <button className={`px-3 py-1 ${btnBorder} rounded-full`} onClick={()=>{ setAnswers(Array(reading?.questions.length||0).fill(-1)); setShowResult(false); }}>รีเซ็ตคำตอบ</button>
+            <div className="flex items-center gap-3">
+              <label className="text-sm">
+                ระดับ:
+                <select
+                  className={`ml-2 border rounded px-2 py-1 ${theme==='dark'?'bg-slate-800 border-slate-700':'bg-white border-slate-300'}`}
+                  value={levelFilter}
+                  onChange={(e)=> { setLevelFilter(e.target.value); safeSetItem('reading_level_filter', e.target.value); }}
+                >
+                  <option value="ALL">ทั้งหมด</option>
+                  {LEVELS.map(lv => (<option key={lv} value={lv}>{lv}</option>))}
+                </select>
+              </label>
+              <label className="text-sm">
+                เลือกบทความ:
+                <select
+                  className={`ml-2 border rounded px-2 py-1 ${theme==='dark'?'bg-slate-800 border-slate-700':'bg-white border-slate-300'}`}
+                  value={readingId || ''}
+                  onChange={(e) => { setReadingId(e.target.value); safeSetItem('reading_last_id', e.target.value); setShowResult(false); }}
+                >
+                  {filteredReadings.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.title} ({r.level})
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           </div>
         </div>
@@ -125,11 +242,46 @@ export default function ReadingModePage() {
                 <h1 className="text-xl font-bold">{reading.title}</h1>
                 <span className={`text-xs ${muted}`}>ระดับ: {reading.level}</span>
               </div>
+              <div className="flex items-center gap-2 mb-2">
+                <button
+                  className={`btn btn-outline ${speaking ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  onClick={speakAll}
+                  disabled={speaking}
+                >
+                  🔊 อ่านออกเสียงทั้งเรื่อง
+                </button>
+                <button
+                  className={`btn btn-outline ${speaking ? '' : 'opacity-50'}`}
+                  onClick={stopSpeak}
+                  disabled={!speaking}
+                >
+                  ⏹️ หยุดอ่าน
+                </button>
+              </div>
               <div className="space-y-4 leading-relaxed">
                 {reading.paragraphs.map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
               </div>
+
+              {reading.translationTh && (
+                <div className="mt-4">
+                  <button
+                    className={`btn btn-outline`}
+                    onClick={() => setShowTrans((s) => !s)}
+                    aria-pressed={showTrans}
+                    aria-controls="reading-translation"
+                  >
+                    {showTrans ? "ซ่อนคำแปล" : "แสดงคำแปล"}
+                  </button>
+                  {showTrans && (
+                    <div id="reading-translation" className={`mt-3 rounded-xl border p-3 ${theme==='dark'?'bg-slate-900/50 border-slate-700':'bg-slate-50'}`}>
+                      <div className={`text-sm ${muted} mb-1`}>คำแปลภาษาไทย</div>
+                      <div className="whitespace-pre-line leading-relaxed">{reading.translationTh}</div>
+                    </div>
+                  )}
+                </div>
+              )}
             </article>
 
             {/* Questions */}
@@ -145,14 +297,32 @@ export default function ReadingModePage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {q.choices.map((c, ci) => {
                           const selected = chosen === ci;
-                          const showState = showResult && selected;
-                          const stateClass = showState ? (ci === q.answerIndex ? "border-green-500 bg-green-50" : "border-rose-400 bg-rose-50") : "";
+                          // Strong highlight when showing results
+                          const resultClass = showResult
+                            ? (ci === q.answerIndex
+                                ? (theme === "dark"
+                                    ? "border-green-500 bg-green-800/30 text-green-200"
+                                    : "border-green-500 bg-green-100 text-green-800")
+                                : (selected
+                                    ? (theme === "dark"
+                                        ? "border-rose-500 bg-rose-800/30 text-rose-200"
+                                        : "border-rose-500 bg-rose-100 text-rose-800")
+                                    : "opacity-80"))
+                            : "";
+
+                          // Pre-submit selection highlight
+                          const selectedClass = !showResult && selected
+                            ? (theme === "dark" ? "border-violet-500 bg-violet-900/30" : "border-violet-400 bg-violet-50")
+                            : "";
+
+                          const finalState = resultClass || selectedClass;
                           return (
                             <button
                               key={ci}
-                              className={`text-left px-3 py-2 rounded-xl border ${btnBorder} ${stateClass}`}
-                              onClick={() => onChoose(qi, ci)}
-                              disabled={showResult}
+                              type="button"
+                              className={`text-left px-3 py-2 rounded-xl border ${btnBorder} ${finalState} pointer-events-auto`}
+                              aria-pressed={selected}
+                              onClick={() => !showResult && onChoose(qi, ci)}
                             >
                               <span className="font-medium mr-1">{String.fromCharCode(65 + ci)}.</span>
                               {c}
@@ -181,18 +351,23 @@ export default function ReadingModePage() {
                   );
                 })}
               </ol>
-              <div className="mt-4 flex items-center justify-between">
+              <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
                 <div className={`${muted} text-sm`}>
                   ตอบแล้ว {answers.filter(a=>a!==-1).length} / {reading.questions.length}
                 </div>
                 {!showResult ? (
-                  <button className={`px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800`} onClick={()=> setShowResult(true)}>
-                    ตรวจคำตอบ
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button className={`btn btn-outline`} onClick={()=>{ setAnswers(Array(reading?.questions.length||0).fill(-1)); setShowResult(false); }}>
+                      รีเซ็ตคำตอบ
+                    </button>
+                    <button className={`btn btn-solid`} onClick={()=> setShowResult(true)}>
+                      ตรวจคำตอบ
+                    </button>
+                  </div>
                 ) : (
                   <div className="flex items-center gap-3">
                     <span className="text-sm">คะแนน: <b>{numCorrect}</b> / {reading.questions.length}</span>
-                    <button className={`px-3 py-1 ${btnBorder} rounded-full`} onClick={()=>{ setShowResult(false); setAnswers(Array(reading.questions.length).fill(-1)); }}>
+                    <button className={`btn btn-outline`} onClick={()=>{ setShowResult(false); setAnswers(Array(reading.questions.length).fill(-1)); }}>
                       ทำใหม่อีกครั้ง
                     </button>
                   </div>
@@ -215,4 +390,3 @@ export default function ReadingModePage() {
     </div>
   );
 }
-

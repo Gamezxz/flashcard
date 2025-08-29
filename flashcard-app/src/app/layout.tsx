@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import BottomNav from "@/components/BottomNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,21 +60,46 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 // Add a version query to help bust caches on static hosting
-                const swUrl = '/sw.js?v=1';
-                navigator.serviceWorker.register(swUrl).then(function(registration) {
-                  console.log('SW registered: ', registration);
-                }).catch(function(registrationError) {
-                  console.log('SW registration failed: ', registrationError);
+                const swUrl = '/sw.js?v=3';
+                navigator.serviceWorker.register(swUrl).then(function(reg) {
+                  console.log('SW registered: ', reg);
+                  // Force an update check on load
+                  reg.update();
+
+                  // If there's an updated worker waiting, activate it
+                  if (reg.waiting) {
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                  }
+
+                  reg.addEventListener('updatefound', function() {
+                    const newWorker = reg.installing;
+                    if (newWorker) {
+                      newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                          newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                      });
+                    }
+                  });
+
+                  // Reload once the new SW takes control
+                  let refreshing = false;
+                  navigator.serviceWorker.addEventListener('controllerchange', function() {
+                    if (refreshing) return;
+                    refreshing = true;
+                    window.location.reload();
+                  });
+                }).catch(function(err) {
+                  console.log('SW registration failed: ', err);
                 });
               }
             `,
           }}
         />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <div className="min-h-dvh pb-20">{children}</div>
+        <BottomNav />
       </body>
     </html>
   );

@@ -1,17 +1,12 @@
-const CACHE_NAME = 'thai-english-flashcards-v1';
-const urlsToCache = [
-  '/',
+const CACHE_NAME = 'thai-english-flashcards-v3';
+const PRECACHE = [
   '/manifest.json',
 ];
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE))
   );
   self.skipWaiting();
 });
@@ -33,34 +28,37 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Runtime caching
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        if (response) {
-          return response;
-        }
-        
-        return fetch(event.request).then((response) => {
-          // Don't cache non-successful responses
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
+  const req = event.request;
+  const url = new URL(req.url);
 
-          // Clone the response
-          const responseToCache = response.clone();
+  // Network-first for navigation (HTML)
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req, { cache: 'no-store' }).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
 
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-
-          return response;
-        });
-      })
-  );
+  // Stale-while-revalidate for static assets
+  if (url.origin === location.origin && /\.(?:js|css|png|jpg|jpeg|gif|svg|webp|ico|json)$/.test(url.pathname)) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) =>
+        cache.match(req).then((cached) => {
+          const fetchPromise = fetch(req).then((networkRes) => {
+            if (networkRes && networkRes.status === 200) {
+              cache.put(req, networkRes.clone());
+            }
+            return networkRes;
+          }).catch(() => cached);
+          return cached || fetchPromise;
+        })
+      )
+    );
+    return;
+  }
+  // Default: pass-through
 });
 
 // Background sync for offline functionality
@@ -91,4 +89,11 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification('Thai-English Flash Cards', options)
   );
+});
+
+// Allow page to trigger immediate activation of new SW
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
