@@ -1,0 +1,8 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="64" fill="#1e293b"/>
+  <rect x="64" y="128" width="384" height="256" rx="24" fill="white"/>
+  <text x="256" y="200" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#1e293b">🇬🇧</text>
+  <text x="256" y="260" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#64748b">Flash</text>
+  <text x="256" y="290" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#64748b">Cards</text>
+  <text x="256" y="340" font-family="Arial, sans-serif" font-size="32" text-anchor="middle" fill="#1e293b">🇹🇭</text>
+</svg>
