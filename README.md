@@ -8,7 +8,7 @@ Interactive flashcard application for Thai speakers learning English vocabulary 
 
 ## Screenshot
 
-![App Screenshot](flashcard-app/public/screenshot-wide.png)
+![App Screenshot](flashcard-app/public/screenshot.png)
 
 ## Features 📱
 
