@@ -15,6 +15,7 @@ const safeSetItem = (k: string, v: string): void => {
 };
 
 const canSpeak = typeof window !== "undefined" && "speechSynthesis" in window;
+const VOICE_KEY = "tts_voice_google_en_uri";
 // Wait until voices are loaded (some browsers populate asynchronously)
 const waitForVoices = async (timeoutMs: number = 4000): Promise<SpeechSynthesisVoice[]> => {
   const synth = window.speechSynthesis;
@@ -47,8 +48,13 @@ const getPreferredVoice = async (lang: string = "en-GB"): Promise<SpeechSynthesi
     const voices = await waitForVoices();
     const lower = (lang || "").toLowerCase();
     const base = lower.split('-')[0];
+    const saved = safeGetItem(VOICE_KEY);
+    const isEn = (v: SpeechSynthesisVoice) => (v.lang || "").toLowerCase().startsWith("en");
+    const bySaved = saved ? voices.find(v => v.voiceURI === saved) || null : null;
+    if (bySaved && isEn(bySaved)) return bySaved;
+    const byDaniel = voices.find(v => /daniel/i.test(v.name || ""));
+    if (byDaniel && isEn(byDaniel)) return byDaniel;
     return (
-      voices.find(v => (v.name || "").includes("Google UK English Male")) ||
       voices.find(v => (v.lang || "").toLowerCase().startsWith(lower)) ||
       voices.find(v => (v.lang || "").toLowerCase().startsWith(base)) ||
       null
@@ -91,6 +97,8 @@ export default function ReadingModePage() {
   const stopRef = useRef(false);
   const [speaking, setSpeaking] = useState(false);
   const [levelFilter, setLevelFilter] = useState<string>("ALL");
+  const [voiceOptions, setVoiceOptions] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceUri, setVoiceUri] = useState<string | null>(null);
 
   useEffect(() => {
     const t = safeGetItem("thai_en_flash_theme") || "light";
@@ -100,6 +108,20 @@ export default function ReadingModePage() {
     setLevelFilter(savedLevel);
     setReadingId(last || READINGS[0]?.id || null);
     setReady(true);
+  }, []);
+
+  // Load voices filtered to EN
+  useEffect(() => {
+    if (!canSpeak) return;
+    const load = () => {
+      const all = window.speechSynthesis.getVoices();
+      const filtered = all.filter(v => (v.lang || "").toLowerCase().startsWith("en"));
+      setVoiceOptions(filtered);
+      setVoiceUri(safeGetItem(VOICE_KEY));
+    };
+    load();
+    window.speechSynthesis.addEventListener?.('voiceschanged', load);
+    return () => { window.speechSynthesis.removeEventListener?.('voiceschanged', load); };
   }, []);
 
   const filteredReadings = useMemo(() => {
@@ -229,6 +251,7 @@ export default function ReadingModePage() {
                   ))}
                 </select>
               </label>
+              {/* Voice selector moved to footer */}
             </div>
           </div>
         </div>
@@ -382,9 +405,30 @@ export default function ReadingModePage() {
         )}
 
         {/* Footer */}
-        <footer className={`mt-6 text-center ${muted} space-y-2`}>
+        <footer className={`mt-6 text-center ${muted} space-y-3`}>
           <p className="text-xs">โหมดอ่านเพื่อฝึกอ่านความเข้าใจ (Reading Comprehension)</p>
           <p className="text-xs">ใช้ Web Speech API เพื่ออ่านออกเสียงย่อหน้า (เฉพาะเบราว์เซอร์ที่รองรับ)</p>
+          {canSpeak && (
+            <div className="flex justify-center">
+              <label className="text-sm flex items-center gap-2">
+                เสียง:
+                <select
+                  className={`ml-1 border rounded px-2 py-1 ${theme==='dark'?'bg-slate-800 border-slate-700':'bg-white border-slate-300'}`}
+                  value={voiceUri || ''}
+                  onChange={(e) => {
+                    const v = e.target.value || '';
+                    setVoiceUri(v || null);
+                    safeSetItem(VOICE_KEY, v);
+                  }}
+                >
+                  <option value="">English (อัตโนมัติ — Daniel ถ้ามี)</option>
+                  {voiceOptions.map(v => (
+                    <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
         </footer>
       </div>
     </div>

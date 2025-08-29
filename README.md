@@ -14,14 +14,15 @@ Interactive flashcard application for Thai speakers learning English vocabulary 
 
 - **Mobile-First Design**: Optimized for smartphone usage
 - **Interactive Learning**: Multiple choice questions with instant feedback
-- **Speech Features**: 
-  - Text-to-Speech for pronunciation practice
+- **Speech Features**:
+  - Text-to-Speech with selectable English voices (footer selector)
+  - Default voice prefers “Daniel” (if available), then other EN voices
   - Speech Recognition for speaking practice with similarity scoring
 - **Progress Tracking**: LocalStorage-based progress management
 - **Smart Filtering**: Filter by CEFR levels (A1-C2) and categories
 - **Dark/Light Theme**: User preference with persistent storage
 - **Vocabulary Database**: 400+ words with Thai translations and examples
- - **Reading Mode**: Short passages (2–3 paragraphs) with 5–10 comprehension questions
+- **Reading Mode**: Short passages (2–3 paragraphs) with 5–10 comprehension questions
 
 ## Tech Stack 🚀
 
@@ -69,12 +70,12 @@ python3 fix_ids.py              # Alternative ID fix (Python)
 
 ## Architecture 🏗️
 
-- `/flashcard-app/src/app/page.tsx` - Main flashcard component
- - `/flashcard-app/src/app/reading/page.tsx` - Reading mode: passages + comprehension questions
-- `/flashcard-app/src/data/vocabulary.ts` - TypeScript vocabulary database
- - `/flashcard-app/src/data/readings.ts` - Reading passages and questions
-- Root level `.js` files - Vocabulary management utilities
-- `CLAUDE.md` - Development documentation for AI assistants
+- `flashcard-app/src/app/page.tsx` — Main flashcard component
+- `flashcard-app/src/app/reading/page.tsx` — Reading mode (passages + questions)
+- `flashcard-app/src/data/vocabulary.ts` — Vocabulary database (TypeScript)
+- `flashcard-app/src/data/readings.ts` — Reading passages and questions
+- Root-level scripts in `add_words_function/` — Vocabulary management utilities
+- `CLAUDE.md` — Development documentation for AI assistants
 
 ## Categories & Levels 📊
 
@@ -124,15 +125,12 @@ See `CLAUDE.md` for detailed development guidance and architecture overview.
 
 ### การทำงานหน้า Flashcard
 
-- ยูทิลิตี้: สุ่ม/จัดชุดตัวเลือก เช่น `shuffle`, `buildChoices` ที่ `flashcard-app/src/app/page.tsx:133`
-- เลือกคำถัดไป: เน้นคำที่ยังไม่รู้ก่อน `pickNextWord` ที่ `flashcard-app/src/app/page.tsx:145`
-- บันทึกความคืบหน้า: เก็บ `Set<number>` ของ `known` ใน `localStorage` (safe getter/setter) ที่ `flashcard-app/src/app/page.tsx:27`
-- อ่านออกเสียง (TTS): `speak()` ใช้ Web Speech API ที่ `flashcard-app/src/app/page.tsx:47`
-- ฝึกพูด (STT): `createRecognizer()` + คำนวณ `similarity()` ด้วย Levenshtein ที่ `flashcard-app/src/app/page.tsx:63`, `flashcard-app/src/app/page.tsx:77`
-- สถานะหลัก: ฟิลเตอร์ระดับ/หมวด, เฉพาะคำที่ยังไม่รู้, ธีม, การ์ดปัจจุบัน ที่ `flashcard-app/src/app/page.tsx:166`
-- เริ่มฝึกพูด: `startPractice()` ใช้ SpeechRecognition ที่ `flashcard-app/src/app/page.tsx:260`
-- ธีม: คำนวณคลาสตามธีมที่ `flashcard-app/src/app/page.tsx:288`; ตัวแปรสีใน `flashcard-app/src/app/globals.css`
-- ส่วนคืนค่า UI หลักที่ `flashcard-app/src/app/page.tsx:307`
+- ยูทิลิตี้: สุ่ม/จัดชุดตัวเลือก เช่น `shuffle`, `buildChoices`
+- เลือกคำถัดไป: เน้นคำที่ยังไม่รู้ก่อนด้วยการถ่วงน้ำหนัก
+- บันทึกความคืบหน้า: เก็บ `known` ใน `localStorage` ด้วย safe getter/setter
+- อ่านออกเสียง (TTS): ฟังก์ชัน `speak()` ใช้ Web Speech API และเสียงที่เลือกจาก dropdown ใน Footer
+- ฝึกพูด (STT): ใช้ Web Speech API (SpeechRecognition) + คำนวณคะแนนความเหมือนด้วย Levenshtein
+- ธีม: สลับ light/dark พร้อมจำค่าผ่าน `localStorage`
 
 ### PWA
 
@@ -148,7 +146,14 @@ See `CLAUDE.md` for detailed development guidance and architecture overview.
 - เนื้อหา: บทความสั้นภาษาอังกฤษ 2–3 ย่อหน้า พร้อมคำถามความเข้าใจ 5–10 ข้อ
 - ไฟล์ข้อมูล: `flashcard-app/src/data/readings.ts`
 - หน้าใช้งาน: `flashcard-app/src/app/reading/page.tsx` (ปุ่มเข้าใช้งาน “📖 โหมดอ่าน” อยู่ที่หัวหน้าหลัก)
-- ฟีเจอร์: ปุ่มอ่านออกเสียงย่อหน้าทั้งหมด, แสดงผลถูก/ผิดและเฉลย, คำนวณคะแนนรวม
+- ฟีเจอร์: อ่านออกเสียงทั้งเรื่อง, เฉลย/ให้คะแนน, ตัวเลือกเสียงอยู่ที่ Footer ของหน้า
+
+### เสียงอ่านออกเสียง (TTS Voices)
+
+- เลือกเสียงอังกฤษทั้งหมดที่ระบบรายงานว่า `lang` เป็น `en*`
+- ค่าตั้งต้น: ใช้เสียงที่ผู้ใช้เคยเลือกไว้ ถ้าไม่มีจะลอง “Daniel” ก่อน (ถ้ามี)
+- ตัวเลือกเสียงอยู่ที่ Footer ทั้งในหน้าแฟลชการ์ดและหน้า Reading และจะถูกจำไว้ใน `localStorage` คีย์ `tts_voice_google_en_uri`
+- iOS (iPhone/iPad): ใช้เสียงของระบบ Apple เท่านั้น จึงอาจไม่มีเสียง Google; สามารถไปที่ Settings > Accessibility > Spoken Content > Voices > English เพื่อดาวน์โหลดเสียงเพิ่ม (เช่น Daniel) แล้วรีโหลดหน้าเว็บอีกครั้ง
 
 - `add_words_function/vocabulary-analysis.js:1`: วิเคราะห์จำนวนคำ/ระดับ/หมวด, ตรวจซ้ำ, สรุปสถิติ
 - `add_words_function/check-duplicates.js:1`: ตรวจคำ/ID ซ้ำ

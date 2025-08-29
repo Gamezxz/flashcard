@@ -46,19 +46,40 @@ const safeSetItem = (k: string, v: string): void => {
 
 // ------------------------- Speech: TTS + STT -------------------------
 const canSpeak = typeof window !== "undefined" && "speechSynthesis" in window;
+
+// Persisted key for selected voice
+const VOICE_KEY = "tts_voice_google_en_uri";
+
+// Pick a voice: prefer saved EN voice, then "Daniel" (EN-GB male on Apple), then any EN, then lang fallback
+const pickVoice = (lang: string = "en-GB"): SpeechSynthesisVoice | null => {
+  if (!canSpeak) return null;
+  try {
+    const voices = window.speechSynthesis.getVoices();
+    const saved = (() => { try { return window.localStorage.getItem(VOICE_KEY); } catch { return null; } })();
+    const isEn = (v: SpeechSynthesisVoice) => (v.lang || "").toLowerCase().startsWith("en");
+
+    const bySaved = saved ? voices.find(v => v.voiceURI === saved) || null : null;
+    if (bySaved && isEn(bySaved)) return bySaved;
+
+    const byDaniel = voices.find(v => /daniel/i.test(v.name || ""));
+    if (byDaniel && isEn(byDaniel)) return byDaniel;
+
+    const lower = (lang || "").toLowerCase();
+    const byLangExact = voices.find(v => (v.lang || "").toLowerCase().startsWith(lower));
+    if (byLangExact) return byLangExact;
+
+    const byEn = voices.find(isEn);
+    return byEn || null;
+  } catch { return null; }
+};
+
 const speak = (text: string, lang: string = "en-GB"): void => {
   if (!canSpeak || !text) return;
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    try {
-      const voices = window.speechSynthesis.getVoices();
-      const byExactName = voices.find(v => (v.name || "").includes("Google UK English Male"));
-      const byEnGb = voices.find(v => (v.lang || "").toLowerCase().startsWith("en-gb"));
-      const byEn = voices.find(v => (v.lang || "").toLowerCase().startsWith("en"));
-      const v = byExactName || byEnGb || byEn || null;
-      if (v) { u.voice = v; u.lang = v.lang || lang; } else { u.lang = lang; }
-    } catch { u.lang = lang; }
+    const v = pickVoice(lang);
+    if (v) { u.voice = v; u.lang = v.lang || lang; } else { u.lang = lang; }
     u.rate = 0.95;
     u.pitch = 1.0;
     window.speechSynthesis.speak(u);
@@ -182,12 +203,28 @@ export default function FlashcardThaiEN() {
   const [autoSpeak, setAutoSpeak] = useState(true);
   const [theme, setTheme] = useState("light");
   const [isHydrated, setIsHydrated] = useState(false);
+  const [voiceOptions, setVoiceOptions] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceUri, setVoiceUri] = useState<string | null>(null);
 
   // Hydrate client-side values after mounting
   useEffect(() => {
     const savedTheme = safeGetItem("thai_en_flash_theme") || "light";
     setTheme(savedTheme);
     setIsHydrated(true);
+  }, []);
+
+  // Load voices and keep only EN
+  useEffect(() => {
+    if (!canSpeak) return;
+    const load = () => {
+      const all = window.speechSynthesis.getVoices();
+      const filtered = all.filter(v => (v.lang || "").toLowerCase().startsWith("en"));
+      setVoiceOptions(filtered);
+      try { setVoiceUri(window.localStorage.getItem(VOICE_KEY)); } catch {}
+    };
+    load();
+    window.speechSynthesis.addEventListener?.('voiceschanged', load);
+    return () => { window.speechSynthesis.removeEventListener?.('voiceschanged', load); };
   }, []);
 
   useEffect(() => {
@@ -458,6 +495,27 @@ export default function FlashcardThaiEN() {
             <button className={`text-sm px-3 py-1 ${btnBorder} rounded-full`} onClick={initCard} title="สุ่มการ์ดใหม่">สุ่มใหม่</button>
             <button className={`text-sm px-4 py-2 ${btnBorder} rounded-full`} onClick={reset} title="ล้างความคืบหน้า">รีเซ็ตความคืบหน้า</button>
           </div>
+          {canSpeak && (
+            <div className="mt-3 flex justify-center">
+              <label className="text-sm flex items-center gap-2">
+                เสียง:
+                <select
+                  className={`ml-1 border rounded px-2 py-1 ${theme==='dark'?'bg-slate-800 border-slate-700':'bg-white border-slate-300'}`}
+                  value={voiceUri || ''}
+                  onChange={(e) => {
+                    const v = e.target.value || null;
+                    setVoiceUri(v);
+                    try { if (v) window.localStorage.setItem(VOICE_KEY, v); else window.localStorage.removeItem(VOICE_KEY); } catch {}
+                  }}
+                >
+                  <option value="">English (อัตโนมัติ — Daniel ถ้ามี)</option>
+                  {voiceOptions.map(v => (
+                    <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
           <p className="text-xs">
             สร้างเพื่อผู้เรียนไทย — เก็บความคืบหน้าไว้ในเครื่องของคุณ (LocalStorage) · ใช้ Web Speech API สำหรับเสียงอ่าน & ฝึกออกเสียง (เฉพาะเบราว์เซอร์ที่รองรับ)
           </p>
