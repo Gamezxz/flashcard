@@ -53,6 +53,8 @@ Or with PM2:
 pm2 start ecosystem.config.js
 ```
 
+Note on static export (output: export): Next.js does not apply `rewrites` or `headers` in `next.config.ts` for static exports. Configure HTTP headers at your hosting layer (e.g., Nginx, CloudFront) if needed. The Service Worker is registered with a versioned URL (`/sw.js?v=1`) to mitigate caching on static hosts.
+
 ## Vocabulary Management 📚
 
 The project includes utilities for expanding and fixing the vocabulary database:
