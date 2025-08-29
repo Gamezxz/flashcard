@@ -24,12 +24,13 @@ npm run lint               # ESLint checking
 pm2 start ecosystem.config.js  # PM2 production deployment
 ```
 
-### Vocabulary Management (root directory)
+### Vocabulary Management (add_words_function/ directory)
 ```bash
-node vocabulary-utils.js              # Test vocabulary management system
-node a1-expansion.js                 # Add A1 level words to database
-node vocabulary-analysis.js          # Analyze existing vocabulary
-node filter-and-add-levels.js       # Process and add words by level
+cd add_words_function
+node vocabulary-analysis.js          # Analyze existing vocabulary statistics and distribution
+node check-duplicates.js            # Check for duplicate words and IDs in database
+node fix-vocabulary-ids.js           # Fix ID sequencing issues
+python3 fix_ids.py                   # Alternative ID fixing script
 ```
 
 ## Architecture Overview
@@ -65,13 +66,11 @@ interface Word {
 - **Dark/Light Theme**: User preference with localStorage persistence
 
 ### Vocabulary Management System
-The VocabularyManager class (`vocabulary-utils.js`) provides:
-- Duplicate detection and validation
-- ID generation and tracking (auto-increments from 393+)
-- Word object creation with validation
-- Level appropriateness checking
-- Batch word addition to TypeScript file
-- Parses existing vocabulary.ts to maintain data integrity
+The vocabulary management utilities in `add_words_function/` provide:
+- **vocabulary-analysis.js**: Complete vocabulary statistics including word distribution by CEFR level, category usage analysis, duplicate detection, and ID range tracking
+- **check-duplicates.js**: Dedicated duplicate detection for both words and IDs with detailed reporting
+- **fix-vocabulary-ids.js**: ID sequencing repair and validation
+- All scripts parse the existing `vocabulary.ts` file to maintain data integrity
 
 ## Data Organization
 
@@ -80,16 +79,17 @@ The VocabularyManager class (`vocabulary-utils.js`) provides:
 - **Categories**: daily, food, home, work, school, social, shopping, money, time, grammar, technology, travel, health, weather, city
 
 ### Current Vocabulary Status
-The database contains approximately 400+ words across all levels. Use `vocabulary-analysis.js` to get current statistics.
+The database contains approximately 400+ words across all levels. Use `node add_words_function/vocabulary-analysis.js` to get current statistics and distribution analysis.
 
 ## Working with Vocabulary
 
 ### Adding New Words
-1. Use `VocabularyManager` class for validation and ID generation
+1. Check for duplicates first using `node add_words_function/check-duplicates.js`
 2. Follow the Word interface structure exactly
 3. Ensure examples array has both English (`en`) and Thai (`th`) fields
 4. Assign appropriate CEFR level and categories
-5. Test with `node vocabulary-utils.js` before adding to main database
+5. Use highest ID + 1 for new entries (check with vocabulary-analysis.js)
+6. Validate changes using the analysis scripts before committing
 
 ### Word Quality Guidelines
 - Include natural, commonly-used example sentences
