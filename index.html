@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>FlashCards — Learn English Vocabulary</title>
+        <meta
+            name="description"
+            content="Master English vocabulary with 2,700+ flashcards, reading exercises, and pronunciation practice. Available on the App Store."
+        />
+        <link rel="icon" type="image/png" href="screenshots/IMG_2116.png" />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            :root {
+                --bg: #ffffff;
+                --bg2: #f5f5f7;
+                --text: #1d1d1f;
+                --text2: #86868b;
+                --accent: #0071e3;
+                --card-bg: #ffffff;
+                --card-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #000000;
+                    --bg2: #1c1c1e;
+                    --text: #f5f5f7;
+                    --text2: #98989d;
+                    --accent: #2997ff;
+                    --card-bg: #1c1c1e;
+                    --card-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+                }
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                    "Segoe UI", Roboto, sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                line-height: 1.6;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            /* Hero */
+            .hero {
+                text-align: center;
+                padding: 80px 24px 40px;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            .hero-icon {
+                width: 120px;
+                height: 120px;
+                border-radius: 28px;
+                margin-bottom: 24px;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+            }
+
+            .hero h1 {
+                font-size: 3rem;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                margin-bottom: 12px;
+            }
+
+            .hero .tagline {
+                font-size: 1.35rem;
+                color: var(--text2);
+                max-width: 500px;
+                margin: 0 auto 32px;
+            }
+
+            .app-store-badge {
+                display: inline-block;
+                transition: opacity 0.2s;
+            }
+
+            .app-store-badge:hover {
+                opacity: 0.8;
+            }
+
+            .app-store-badge img {
+                height: 54px;
+            }
+
+            /* Screenshots */
+            .screenshots {
+                padding: 40px 0 60px;
+                overflow: hidden;
+            }
+
+            .screenshots h2 {
+                text-align: center;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: var(--text2);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 24px;
+            }
+
+            .scroll-container {
+                display: flex;
+                gap: 16px;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                padding: 0 24px 16px;
+                justify-content: center;
+                scrollbar-width: none;
+            }
+
+            .scroll-container::-webkit-scrollbar {
+                display: none;
+            }
+
+            .scroll-container img {
+                flex-shrink: 0;
+                width: 220px;
+                border-radius: 20px;
+                box-shadow: var(--card-shadow);
+                scroll-snap-align: center;
+            }
+
+            /* Features */
+            .features {
+                max-width: 960px;
+                margin: 0 auto;
+                padding: 60px 24px;
+            }
+
+            .features h2 {
+                text-align: center;
+                font-size: 2.2rem;
+                font-weight: 700;
+                margin-bottom: 48px;
+            }
+
+            .feature-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 24px;
+            }
+
+            .feature-card {
+                background: var(--card-bg);
+                border: 1px solid rgba(128, 128, 128, 0.1);
+                border-radius: 20px;
+                padding: 32px 28px;
+                box-shadow: var(--card-shadow);
+            }
+
+            .feature-card .icon {
+                font-size: 2.5rem;
+                margin-bottom: 16px;
+            }
+
+            .feature-card h3 {
+                font-size: 1.2rem;
+                font-weight: 600;
+                margin-bottom: 8px;
+            }
+
+            .feature-card p {
+                font-size: 0.95rem;
+                color: var(--text2);
+                line-height: 1.5;
+            }
+
+            /* Stats */
+            .stats {
+                background: var(--bg2);
+                padding: 60px 24px;
+                text-align: center;
+            }
+
+            .stats-grid {
+                display: flex;
+                justify-content: center;
+                gap: 48px;
+                flex-wrap: wrap;
+                max-width: 700px;
+                margin: 0 auto;
+            }
+
+            .stat-item .number {
+                font-size: 2.5rem;
+                font-weight: 700;
+                color: var(--accent);
+            }
+
+            .stat-item .label {
+                font-size: 0.9rem;
+                color: var(--text2);
+                margin-top: 4px;
+            }
+
+            /* CTA */
+            .cta {
+                text-align: center;
+                padding: 80px 24px;
+            }
+
+            .cta h2 {
+                font-size: 2rem;
+                font-weight: 700;
+                margin-bottom: 12px;
+            }
+
+            .cta p {
+                color: var(--text2);
+                margin-bottom: 28px;
+                font-size: 1.1rem;
+            }
+
+            /* Footer */
+            footer {
+                text-align: center;
+                padding: 40px 24px;
+                border-top: 1px solid rgba(128, 128, 128, 0.15);
+                color: var(--text2);
+                font-size: 0.85rem;
+            }
+
+            footer a {
+                color: var(--accent);
+                text-decoration: none;
+            }
+
+            footer a:hover {
+                text-decoration: underline;
+            }
+
+            @media (max-width: 600px) {
+                .hero {
+                    padding: 60px 20px 32px;
+                }
+                .hero h1 {
+                    font-size: 2.2rem;
+                }
+                .hero .tagline {
+                    font-size: 1.1rem;
+                }
+                .scroll-container img {
+                    width: 180px;
+                }
+                .features h2 {
+                    font-size: 1.7rem;
+                }
+                .stats-grid {
+                    gap: 32px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Hero -->
+        <section class="hero">
+            <img
+                src="AppIcon.png"
+                alt="FlashCards App Icon"
+                class="hero-icon"
+            />
+            <h1>FlashCards</h1>
+            <p class="tagline">
+                Master English vocabulary with 2,700+ flashcards, reading
+                exercises, and pronunciation practice. Supports Thai, Chinese,
+                Spanish, and French.
+            </p>
+            <a
+                href="https://apps.apple.com/th/app/flashcards-cefr-english/id6759033338"
+                class="app-store-badge"
+            >
+                <img
+                    src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                    alt="Download on the App Store"
+                />
+            </a>
+        </section>
+
+        <!-- Screenshots -->
+        <section class="screenshots">
+            <h2>Preview</h2>
+            <div class="scroll-container">
+                <img
+                    src="screenshots/IMG_2116.png"
+                    alt="Flashcard Mode"
+                    loading="lazy"
+                />
+                <img
+                    src="screenshots/IMG_2117.png"
+                    alt="Word Explanation"
+                    loading="lazy"
+                />
+                <img
+                    src="screenshots/IMG_2118.png"
+                    alt="Reading Mode"
+                    loading="lazy"
+                />
+                <img
+                    src="screenshots/IMG_2119.png"
+                    alt="Pronunciation Practice"
+                    loading="lazy"
+                />
+                <img
+                    src="screenshots/IMG_2120.png"
+                    alt="Profile & Streak"
+                    loading="lazy"
+                />
+                <img
+                    src="screenshots/IMG_2121.png"
+                    alt="Settings"
+                    loading="lazy"
+                />
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features">
+            <h2>Everything you need to learn English</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon">🃏</div>
+                    <h3>Smart Flashcards</h3>
+                    <p>
+                        Multiple choice questions with instant feedback.
+                        Weighted selection prioritizes words you haven't
+                        mastered yet. IPA phonetics included.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📖</div>
+                    <h3>Reading Practice</h3>
+                    <p>
+                        Short articles with comprehension quizzes. Tap any
+                        highlighted word for instant translation, definition,
+                        and examples.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🎙️</div>
+                    <h3>Pronunciation</h3>
+                    <p>
+                        Speak and get scored using Levenshtein similarity.
+                        Character-level diff feedback: green = match, red =
+                        miss.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🌍</div>
+                    <h3>4 Languages</h3>
+                    <p>
+                        Translations in Thai, Chinese, Spanish, and French.
+                        Example sentences translated in all 4 languages.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🔥</div>
+                    <h3>Daily Streak</h3>
+                    <p>
+                        Track your learning streak and weekly activity calendar.
+                        Set daily goals and stay motivated.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📊</div>
+                    <h3>CEFR A1-C2</h3>
+                    <p>
+                        2,700+ words across 6 CEFR levels and 15 categories.
+                        Color-coded highlights in Reading mode.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="stats">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="number">2,700+</div>
+                    <div class="label">Vocabulary Words</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">6</div>
+                    <div class="label">CEFR Levels</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">15</div>
+                    <div class="label">Categories</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">4</div>
+                    <div class="label">Languages</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta">
+            <h2>Start learning today</h2>
+            <p>
+                Free to download. One-time purchase to unlock all words. No
+                subscription.
+            </p>
+            <a
+                href="https://apps.apple.com/th/app/flashcards-cefr-english/id6759033338"
+                class="app-store-badge"
+            >
+                <img
+                    src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                    alt="Download on the App Store"
+                />
+            </a>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>
+                <a href="privacy-policy.html">Privacy Policy</a>
+                &nbsp;&middot;&nbsp;
+                <a href="mailto:gamezxz@gmail.com">Contact</a>
+            </p>
+            <p style="margin-top: 8px">
+                &copy; 2026 FlashCards. All rights reserved.
+            </p>
+        </footer>
+    </body>
+</html>
