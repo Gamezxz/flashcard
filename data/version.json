@@ -1,4 +1,10 @@
 {
-  "vocabulary": { "version": 1, "count": 7934 },
-  "readings": { "version": 1, "count": 35 }
+  "vocabulary": {
+    "version": 2,
+    "count": 8096
+  },
+  "readings": {
+    "version": 1,
+    "count": 35
+  }
 }
