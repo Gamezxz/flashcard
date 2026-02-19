@@ -15,8 +15,8 @@ Interactive English vocabulary learning app with flashcards and reading exercise
 
 ### Flashcard Mode
 - Multiple choice questions with instant feedback
-- 2,700+ words across CEFR levels A1-C2
-- Translations in 4 languages: Thai, Chinese, Spanish, French
+- Oxford 3000–5000 words included, covering CEFR levels A1–C2
+- Translations in 6 languages: Thai, Chinese, Spanish, French, Japanese, Korean
 - Text-to-Speech with selectable English voices
 - Speech Recognition for speaking practice with similarity scoring
 - Smart filtering by CEFR level and category
@@ -113,9 +113,9 @@ xcodebuild -exportArchive \
 
 ## Vocabulary Data
 
-- **2,700+ words** across all CEFR levels (A1, A2, B1, B2, C1, C2)
-- **15 categories**: daily, food, home, work, school, social, shopping, money, time, grammar, technology, travel, health, weather, city
-- Each word includes: definition, hint, part of speech, example sentences, translations (th/zh/es/fr)
+- **Oxford 3000–5000 words** across all CEFR levels (A1, A2, B1, B2, C1, C2)
+- **19 categories**: academic, business, daily, food, health, travel, and more
+- Each word includes: definition, hint, part of speech, IPA, synonyms, example sentences, translations (th/zh/es/fr/ja/ko)
 - Web app data: `flashcard-webapp/src/data/vocabulary.ts`
 - iOS app data: `Flashcard-ios/FlashcardApp/Resources/vocabulary.json`
 
