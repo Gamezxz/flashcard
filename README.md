@@ -19,7 +19,14 @@ English vocabulary learning app with flashcards, reading comprehension, and spea
 
 ## Screenshots
 
-![](screenshots/IMG_2116.png) ![](screenshots/IMG_2117.png) ![](screenshots/IMG_2118.png) ![](screenshots/IMG_2119.png)
+<table>
+  <tr>
+    <td><img src="screenshots/IMG_2116.png" width="200"/></td>
+    <td><img src="screenshots/IMG_2117.png" width="200"/></td>
+    <td><img src="screenshots/IMG_2118.png" width="200"/></td>
+    <td><img src="screenshots/IMG_2119.png" width="200"/></td>
+  </tr>
+</table>
 
 ## Vocabulary Data
 
