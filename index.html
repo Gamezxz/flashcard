@@ -3,10 +3,10 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>FlashCards — Learn English Vocabulary</title>
+        <title>VocabCard – CEFR English Vocab Quiz & Flashcards</title>
         <meta
             name="description"
-            content="Master English vocabulary with Oxford 3000–5000 words, reading exercises, and pronunciation practice. Available on the App Store."
+            content="Master 10,674 English vocabulary words organized by CEFR levels A1–C2. Quiz, flashcards, reading, pronunciation practice. Available on the App Store."
         />
         <link rel="icon" type="image/png" href="AppIcon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,14 +23,14 @@
             }
 
             :root {
-                --bg: #0a0a0a;
+                --bg: #0c0c1a;
                 --surface: rgba(255, 255, 255, 0.04);
                 --border: rgba(255, 255, 255, 0.08);
                 --text: #f5f5f7;
                 --text2: #8e8e93;
-                --accent: #ff6b35;
-                --accent2: #ff9500;
-                --glow: rgba(255, 107, 53, 0.15);
+                --accent: #5eaafc;
+                --accent2: #a37bfa;
+                --glow: rgba(94, 170, 252, 0.12);
             }
 
             body {
@@ -90,7 +90,7 @@
                 align-items: center;
                 justify-content: space-between;
                 padding: 0 24px;
-                background: rgba(10, 10, 10, 0.8);
+                background: rgba(12, 12, 26, 0.8);
                 backdrop-filter: blur(20px);
                 -webkit-backdrop-filter: blur(20px);
                 border-bottom: 1px solid var(--border);
@@ -145,7 +145,7 @@
                 height: 100px;
                 border-radius: 24px;
                 margin-bottom: 28px;
-                box-shadow: 0 8px 40px rgba(255, 107, 53, 0.25);
+                box-shadow: 0 8px 40px rgba(94, 170, 252, 0.25);
             }
 
             .hero h1 {
@@ -191,7 +191,7 @@
                     var(--accent),
                     var(--accent2)
                 );
-                color: #000;
+                color: #fff;
                 font-weight: 700;
                 font-size: 1rem;
                 padding: 14px 28px;
@@ -202,7 +202,7 @@
 
             .btn-primary:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 8px 30px rgba(255, 107, 53, 0.3);
+                box-shadow: 0 8px 30px rgba(94, 170, 252, 0.3);
             }
 
             .btn-secondary {
@@ -464,8 +464,8 @@
         <!-- Nav -->
         <nav>
             <a href="#" class="nav-brand">
-                <img src="AppIcon.png" alt="FlashCards" />
-                <span>FlashCards</span>
+                <img src="AppIcon.png" alt="VocabCard" />
+                <span>VocabCard</span>
             </a>
             <a
                 href="https://apps.apple.com/th/app/flashcards-cefr-english/id6759033338"
@@ -476,14 +476,14 @@
 
         <!-- Hero -->
         <section class="hero">
-            <img src="AppIcon.png" alt="FlashCards" class="hero-icon" />
+            <img src="AppIcon.png" alt="VocabCard" class="hero-icon" />
             <h1>
-                Master English with <span class="accent">Smart Flashcards</span>
+                Master English with <span class="accent">VocabCard</span>
             </h1>
             <p class="tagline">
-                Oxford 3000–5000 words included, covering CEFR levels A1–C2. Reading
-                exercises, pronunciation practice, and streak tracking. Supports
-                Thai, Chinese, Spanish, French, Japanese, and Korean.
+                10,674 vocabulary words organized by CEFR levels A1–C2.
+                Two quiz modes, reading exercises, pronunciation practice, and
+                streak tracking. Supports 6 languages.
             </p>
             <div class="hero-buttons">
                 <a
@@ -562,18 +562,18 @@
             <div class="feature-grid">
                 <div class="feature-card">
                     <div class="icon-box">🃏</div>
-                    <h3>Smart Flashcards</h3>
+                    <h3>Two Quiz Modes</h3>
                     <p>
-                        Multiple choice with instant feedback. Weighted
-                        selection prioritizes unknown words. IPA phonetics
-                        included.
+                        Word → Definition and Definition → Word. Multiple choice
+                        with instant feedback. Weighted selection prioritizes
+                        unknown words.
                     </p>
                 </div>
                 <div class="feature-card">
                     <div class="icon-box">📖</div>
                     <h3>Reading Practice</h3>
                     <p>
-                        Short articles with comprehension quizzes. Tap any
+                        35+ articles with comprehension quizzes. Tap any
                         highlighted word for instant translation and examples.
                     </p>
                 </div>
@@ -581,16 +581,17 @@
                     <div class="icon-box">🎙️</div>
                     <h3>Pronunciation</h3>
                     <p>
-                        Speak and get scored with Levenshtein similarity.
-                        Character-level diff: green = match, red = miss.
+                        Speak and get scored instantly. Character-level diff
+                        shows exactly what you got right and what to improve.
                     </p>
                 </div>
                 <div class="feature-card">
-                    <div class="icon-box">🌍</div>
-                    <h3>6 Languages</h3>
+                    <div class="icon-box">🔊</div>
+                    <h3>Neural TTS</h3>
                     <p>
-                        Translations in Thai, Chinese, Spanish, French, Japanese,
-                        and Korean. All example sentences translated too.
+                        Natural English voice with word-by-word highlight.
+                        Adjustable speech speed. Follow along as each word is
+                        spoken.
                     </p>
                 </div>
                 <div class="feature-card">
@@ -603,10 +604,10 @@
                 </div>
                 <div class="feature-card">
                     <div class="icon-box">📊</div>
-                    <h3>CEFR A1-C2</h3>
+                    <h3>CEFR A1–C2</h3>
                     <p>
-                        Oxford 3000–5000 words across 6 CEFR levels and 19
-                        categories. Color-coded highlights in Reading mode.
+                        10,674 words across 6 CEFR levels and 19 categories.
+                        Core 3000 and Common 5000 filters included.
                     </p>
                 </div>
             </div>
@@ -616,8 +617,8 @@
         <section class="stats">
             <div class="stats-grid">
                 <div class="stat-item">
-                    <div class="number">Oxford</div>
-                    <div class="label">3000–5000 Words</div>
+                    <div class="number">10,674</div>
+                    <div class="label">Words</div>
                 </div>
                 <div class="stat-item">
                     <div class="number">6</div>
@@ -667,7 +668,7 @@
                 <a href="mailto:gamezxz@gmail.com">Contact</a>
             </p>
             <p style="margin-top: 10px">
-                &copy; 2026 FlashCards. All rights reserved.
+                &copy; 2026 VocabCard. All rights reserved.
             </p>
         </footer>
     </body>
